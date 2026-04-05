@@ -48,18 +48,17 @@ from typing import Any
 # Format: "provider/model-name" (litellm format)
 # See litellm documentation for full list of supported models
 #
-# Recommended models (2026):
-#   - "minimax/minimax-m2.7" (cheap, ~$0.001/task)
-#   - "google/gemini-3-pro-preview" (SOTA reasoning)
+# Recommended models (April 2026):
+#   - "minimax/minimax-m3" (cheapest, latest MiniMax)
+#   - "google/gemini-3.1-pro" (SOTA, Gemini 3.1)
 #   - "anthropic/claude-sonnet-4-6" (Claude Sonnet 4.6)
 #   - "anthropic/claude-opus-4-6" (Claude Opus 4.6, expensive)
-#   - "openai/gpt-5-pro" (GPT-5 Pro)
-#   - "x-ai/grok-4" (Grok 4)
-#   - "deepseek/deepseek-v3-0324" (DeepSeek V3)
+#   - "openai/gpt-5.4" (GPT-5.4, latest)
+#   - "x-ai/grok-4.20" (Grok 4.20)
+#   - "deepseek/deepseek-3.2" (DeepSeek 3.2)
 #
-# Free options:
-#   - "openrouter/qwen/qwen3.6-plus:free" (rate limited)
-#   - "openrouter/google/gemini-3-flash-free"
+# Free options (rate limited):
+#   - "openrouter/qwen/qwen3.6-plus:free"
 MODEL = os.environ.get("AUTOEVO_MODEL", "minimax/minimax-m2.7")
 
 # Model-specific settings

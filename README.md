@@ -51,19 +51,19 @@ The insight: live-swe-agent shows LLMs can extend themselves at runtime. autoage
 
 Uses **litellm** for provider-agnostic model access. Any litellm-supported model works:
 
-| Provider | Model | Cost/task | Notes |
-|---------|-------|-----------|-------|
-| MiniMax | minimax-m2.7 | ~$0.001 | Best cost/efficiency |
-| Google | gemini-3-pro-preview | varies | SOTA reasoning |
-| Anthropic | claude-sonnet-4-6 | ~$0.02 | Claude Sonnet 4.6 |
-| Anthropic | claude-opus-4-6 | ~$0.05 | Claude Opus 4.6, expensive |
-| OpenAI | gpt-5-pro | varies | GPT-5 Pro |
-| DeepSeek | deepseek-v3-0324 | varies | DeepSeek V3 |
-| x-ai | grok-4 | varies | Grok 4 |
-| **Free** | qwen3.6-plus:free | $0 | Rate limited |
+| Provider | Model | Notes |
+|---------|-------|-------|
+| MiniMax | minimax-m3 | Cheapest, latest |
+| Google | gemini-3.1-pro | SOTA reasoning |
+| Anthropic | claude-sonnet-4-6 | Claude Sonnet 4.6 |
+| Anthropic | claude-opus-4-6 | Claude Opus 4.6 |
+| OpenAI | gpt-5.4 | GPT-5.4, latest |
+| DeepSeek | deepseek-3.2 | DeepSeek 3.2 |
+| x-ai | grok-4.20 | Grok 4.20 |
+| **Free** | qwen3.6-plus:free | Rate limited |
 
 ```bash
-export AUTOEVO_MODEL=minimax/minimax-m2.7
+export AUTOEVO_MODEL=minimax/minimax-m3
 ```
 
 ### Installation
