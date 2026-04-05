@@ -51,23 +51,17 @@ The insight: live-swe-agent shows LLMs can extend themselves at runtime. autoage
 
 Uses **litellm** for provider-agnostic model access. Any litellm-supported model works:
 
-| Provider | Model | Cost/task | tbench 2.0 Score |
-|---------|-------|-----------|-------------------|
-| MiniMax | minimax-m2.7 | ~$0.001 | ~42% (M2.5) |
-| Anthropic | claude-sonnet-4-5 | ~$0.02 | ~40% |
-| OpenAI | gpt-4o | ~$0.01 | ~50% |
-| Google | gemini-2.0-flash-exp | varies | varies |
-| **OpenRouter** | any model | provider rates | varies |
+| Provider | Model | Cost/task | Notes |
+|---------|-------|-----------|-------|
+| MiniMax | minimax-m2.7 | ~$0.001 | Best cost/efficiency |
+| Google | gemini-3-pro-preview | varies | SOTA reasoning |
+| Anthropic | claude-sonnet-4-6 | ~$0.02 | Claude Sonnet 4.6 |
+| Anthropic | claude-opus-4-6 | ~$0.05 | Claude Opus 4.6, expensive |
+| OpenAI | gpt-5-pro | varies | GPT-5 Pro |
+| DeepSeek | deepseek-v3-0324 | varies | DeepSeek V3 |
+| x-ai | grok-4 | varies | Grok 4 |
+| **Free** | qwen3.6-plus:free | $0 | Rate limited |
 
-OpenRouter example:
-```bash
-export AUTOEVO_MODEL=openrouter/anthropic/claude-sonnet-4-5
-# Or any OpenRouter model:
-export AUTOEVO_MODEL=openrouter/mistralai/mistral-large-2411
-export AUTOEVO_MODEL=openrouter/deepseek/deepseek-chat-v3-0324
-```
-
-Set via environment variable:
 ```bash
 export AUTOEVO_MODEL=minimax/minimax-m2.7
 ```

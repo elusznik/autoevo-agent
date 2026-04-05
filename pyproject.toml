@@ -2,7 +2,7 @@
 name = "autoevo-agent"
 version = "0.1.0"
 description = "Automating the automation of automation"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
     "litellm>=1.0.0",
     "harbor>=0.3.0",
@@ -14,9 +14,6 @@ dev = [
     "black>=23.0",
     "ruff>=0.1",
 ]
-
-[tool.uv]
-dev-dependencies = []
 
 [tool.hatch.build.targets.wheel]
 packages = ["agent"]
