@@ -57,6 +57,15 @@ Uses **litellm** for provider-agnostic model access. Any litellm-supported model
 | Anthropic | claude-sonnet-4-5 | ~$0.02 | ~40% |
 | OpenAI | gpt-4o | ~$0.01 | ~50% |
 | Google | gemini-2.0-flash-exp | varies | varies |
+| **OpenRouter** | any model | provider rates | varies |
+
+OpenRouter example:
+```bash
+export AUTOEVO_MODEL=openrouter/anthropic/claude-sonnet-4-5
+# Or any OpenRouter model:
+export AUTOEVO_MODEL=openrouter/mistralai/mistral-large-2411
+export AUTOEVO_MODEL=openrouter/deepseek/deepseek-chat-v3-0324
+```
 
 Set via environment variable:
 ```bash
@@ -66,21 +75,26 @@ export AUTOEVO_MODEL=minimax/minimax-m2.7
 ### Installation
 
 ```bash
-cd ~/Work/autoevo-agent
+# 1. Install uv (if you don't have it)
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Install dependencies
-pip install -e .
-# Or with uv:
+# 2. Install dependencies
 uv sync
 
-# Set up environment
+# 3. Set up environment variables
 cat > .env << 'EOF'
-ANTHROPIC_API_KEY=sk-ant-...
-# Or OpenAI
-# OPENAI_API_KEY=sk-...
+# For MiniMax:
+MINIMAX_API_KEY=...
+
+# For OpenRouter:
+OPENROUTER_API_KEY=...
+
+# Or any litellm-supported provider:
+# ANTHROPIC_API_KEY=...
+# OPENAI_API_KEY=...
 EOF
 
-# Build Docker image
+# 4. Build base image
 docker build -f Dockerfile.base -t autoevo-base .
 ```
 
@@ -103,26 +117,33 @@ The meta-agent will:
 ### Running a Single Task Manually
 
 ```bash
-rm -rf jobs; mkdir -p jobs
+# Set model
+export AUTOEVO_MODEL=minimax/minimax-m2.7
 
-harbor run -p tasks/ \
-    --task-name "<task-name>" \
-    -l 1 -n 1 \
-    --agent-import-path agent:AutoEvoAgent \
-    -o jobs \
-    --job-name latest > run.log 2>&1
+# Run single task (using local tasks/ directory)
+rm -rf jobs; mkdir -p jobs
+uv run harbor run -p tasks/ --task-name "<task-name>" -l 1 -n 1 \
+    --agent-import-path agent:AutoEvoAgentAdapter \
+    -o jobs --job-name latest > run.log 2>&1
+
+# Or run on Harbor's built-in tbench 2.0 dataset:
+rm -rf jobs; mkdir -p jobs
+uv run harbor run -d terminal-bench@2.0 -l 1 -n 1 \
+    --agent-import-path agent:AutoEvoAgentAdapter \
+    -o jobs --job-name latest > run.log 2>&1
 ```
 
 ### Running All Tasks
 
 ```bash
-rm -rf jobs; mkdir -p jobs
+# Set model
+export AUTOEVO_MODEL=minimax/minimax-m2.7
 
-harbor run -p tasks/ \
-    -n 10 \
-    --agent-import-path agent:AutoEvoAgent \
-    -o jobs \
-    --job-name latest > run.log 2>&1
+# Run all tasks in parallel (-n = concurrency)
+rm -rf jobs; mkdir -p jobs
+uv run harbor run -d terminal-bench@2.0 -n 10 \
+    --agent-import-path agent:AutoEvoAgentAdapter \
+    -o jobs --job-name latest > run.log 2>&1
 ```
 
 ## Project Structure
