@@ -4,11 +4,10 @@
 
 ## ⚠️ Status: Needs Fix
 
-The agent runs but **does not complete tasks** (scores 0.0). See [TODO.md](TODO.md) for details.
+The agent runs but **does not complete tasks** (scores 0.0).
+See [TODO.md](TODO.md) for the problem.
 
-**Current issue:** Agent explores files, creates tools, but doesn't write output to required location.
-
-This repo is ready for another agent to read and fix. See TODO.md for instructions.
+Read program.md and let's kick off a new experiment!
 
 ---
 
