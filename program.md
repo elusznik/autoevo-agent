@@ -2,9 +2,13 @@
 
 ## Overview
 
-You are optimizing **AutoEvo-Agent**, a hybrid agent that combines:
-1. **Self-evolution** (like live-swe-agent): Agent creates custom Python tools at runtime
-2. **Meta-agent engineering** (like autoagent): You optimize the harness automatically
+You are optimizing **AutoEvo-Agent**, a hybrid agent that combines three lineages:
+
+1. **autoresearch** — The overnight meta-agent loop: edit prompt → run eval → check score → keep/discard → repeat
+2. **autoagent** — "Like autoresearch but for agent engineering." You (the meta-agent) edit `agent.py` (harness), not just prompts
+3. **live-swe-agent** — Runtime self-evolution: the agent creates its own tools *during* task solving, not just between runs
+
+**AutoEvo-Agent does all three**: overnight harness optimization (autoagent/autoresearch) *plus* runtime tool creation (live-swe-agent), with the meta-agent discovering optimal self-evolution strategies.
 
 The agent under test (`agent.py`) uses an `EVOLUTION_CONFIG` dict that controls:
 - When to trigger tool creation (repetitive bash, complexity thresholds, pattern detection)
@@ -207,3 +211,9 @@ AutoEvo-Agent target: > 75.4% (by optimizing evolution strategy)
 ```
 
 Good experiments should improve score by > 1% on average.
+
+## References
+
+- [autoresearch](https://github.com/asgaardlab/autoresearch) — The original meta-agent overnight loop
+- [autoagent](https://github.com/kevinrgu/autoagent) — Harness engineering (this repo's primary lineage)
+- [live-swe-agent](https://github.com/OpenAutoCoder/live-swe-agent) — Runtime self-evolution (this repo's runtime layer)

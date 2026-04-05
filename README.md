@@ -2,9 +2,13 @@
 
 > **Automating the automation of automation.** A meta-agent framework that optimizes live SWE-agent-style self-evolution prompting via autonomous harness engineering.
 
-This project combines:
-- **autoagent** (kevinrgu/autoagent): Meta-agent harness engineering — the agent that optimizes agents
-- **live-swe-agent** (OpenAutoCoder/live-swe-agent): Runtime self-evolution — agents that evolve themselves while solving tasks
+This project combines three insights:
+
+1. **autoresearch** — The original insight: an agent that runs overnight, edits its own prompt, checks score, keeps or discards changes, repeats. (The loop that everything else builds on.)
+
+2. **autoagent** (kevinrgu/autoagent) — "Like autoresearch but for agent engineering." A meta-agent that edits the *harness* (agent.py) rather than just the prompt, enabling optimization of tools, orchestration, and agent architecture.
+
+3. **live-swe-agent** (OpenAutoCoder/live-swe-agent) — Runtime self-evolution: an agent that creates its own Python tools *while solving a task*, without waiting for an overnight meta-agent loop.
 
 The insight: live-swe-agent shows LLMs can extend themselves at runtime. autoagent shows meta-agents can optimize harnesses automatically. **This project does both** — a meta-agent that discovers *when and how* agents should self-evolve.
 
@@ -213,7 +217,8 @@ docker system prune -a -f
 
 ## References
 
-- [autoagent](https://github.com/kevinrgu/autoagent) — Autonomous harness engineering
+- [autoresearch](https://github.com/asgaardlab/autoresearch) — The original "meta-agent that edits itself overnight" (prompt hill-climbing)
+- [autoagent](https://github.com/kevinrgu/autoagent) — "Like autoresearch but for agent engineering" (harness engineering)
 - [live-swe-agent](https://github.com/OpenAutoCoder/live-swe-agent) — Runtime self-evolving SWE agent
 - [Harbor](https://github.com/laude-institute/harbor) — Agent benchmark framework
 - [SWE-agent](https://github.com/SWE-agent/SWE-agent) — SWE-bench solving agent

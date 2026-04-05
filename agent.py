@@ -1,11 +1,17 @@
 """
-AutoEvo-Agent: Combining autoagent's meta-engineering with live-swe-agent's self-evolution.
+AutoEvo-Agent: Automating the automation of automation.
+
+Combines three lineages:
+1. **autoresearch** — Meta-agent that edits prompts overnight, checks score, repeats
+2. **autoagent** (kevinrgu/autoagent) — Meta-agent that edits harness (agent.py) instead of just prompts
+3. **live-swe-agent** (OpenAutoCoder/live-swe-agent) — Agent that creates tools at runtime while solving tasks
+
+This harness does ALL THREE:
+- The meta-agent (human-driven or autonomous) edits EVOLUTION_CONFIG
+- The agent under test self-evolves at runtime (like live-swe-agent)
+- The meta-agent discovers optimal self-evolution strategies
 
 Single-file Harbor agent harness: --agent-import-path agent:AutoEvoAgent
-
-This harness optimizes live SWE-agent-style self-evolution through autonomous
-harness engineering. The meta-agent edits EVOLUTION_CONFIG to discover optimal
-self-evolution strategies.
 """
 
 from __future__ import annotations
