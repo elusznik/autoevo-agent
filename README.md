@@ -4,11 +4,11 @@
 
 This project combines three insights:
 
-1. **autoresearch** — The original insight: an agent that runs overnight, edits its own prompt, checks score, keeps or discards changes, repeats. (The loop that everything else builds on.)
+1. [**autoresearch**](https://github.com/asgaardlab/autoresearch) — The original insight: an agent that runs overnight, edits its own prompt, checks score, keeps or discards changes, repeats. (The loop that everything else builds on.)
 
-2. **autoagent** (kevinrgu/autoagent) — "Like autoresearch but for agent engineering." A meta-agent that edits the *harness* (agent.py) rather than just the prompt, enabling optimization of tools, orchestration, and agent architecture.
+2. [**autoagent**](https://github.com/kevinrgu/autoagent) — "Like autoresearch but for agent engineering." A meta-agent that edits the *harness* (agent.py) rather than just the prompt, enabling optimization of tools, orchestration, and agent architecture.
 
-3. **live-swe-agent** (OpenAutoCoder/live-swe-agent) — Runtime self-evolution: an agent that creates its own Python tools *while solving a task*, without waiting for an overnight meta-agent loop.
+3. [**live-swe-agent**](https://github.com/OpenAutoCoder/live-swe-agent) — Runtime self-evolution: an agent that creates its own Python tools *while solving a task*, without waiting for an overnight meta-agent loop.
 
 The insight: live-swe-agent shows LLMs can extend themselves at runtime. autoagent shows meta-agents can optimize harnesses automatically. **This project does both** — a meta-agent that discovers *when and how* agents should self-evolve.
 
@@ -54,6 +54,8 @@ cd ~/Work/autoevo-agent
 
 # Install dependencies
 pip install -e .
+# Or with uv:
+uv sync
 
 # Set up environment
 cat > .env << 'EOF'
@@ -213,6 +215,41 @@ harbor cache clean -f
 
 # Full Docker nuke
 docker system prune -a -f
+```
+
+## Benchmarks
+
+This project supports any Harbor-format benchmark. See [benchmark-info.md](benchmark-info.md) for details.
+
+### Recommended Benchmarks
+
+| Benchmark | Tasks | Cost (est.) | Notes |
+|-----------|-------|-------------|-------|
+| [SWE-bench Lite](https://www.swebench.com/lite.html) | 300 | ~$400 | Quick, representative |
+| [SpreadsheetBench](https://spreadsheetbench.github.io/) | 400-912 | ~$200-500 | Excel manipulation |
+| [TerminalBench](https://www.tbench.ai/) | 80-89 | ~$100 | Terminal tasks |
+
+### kevinrgu's Original Run (for reference)
+
+Kevin Gu's autoagent achieved:
+- **96.5%** on SpreadsheetBench (first place)
+- **55.1%** on TerminalBench (top GPT-5 score)
+- In **24 hours** with **~32 experiments**
+- Estimated cost: **~$10,000-30,000**
+
+## Results Tracking
+
+```bash
+# Plot progress from results.tsv
+pip install matplotlib
+python plot_progress.py --benchmark spreadsheet
+
+# Manual logging
+# Edit results.tsv after each experiment:
+# experiment	score	change	intervention	kept
+# 0	0.45	baseline	initial config	yes
+# 1	0.48	+0.03	lowered threshold	yes
+# 2	0.47	-0.01	removed tool	yes
 ```
 
 ## References

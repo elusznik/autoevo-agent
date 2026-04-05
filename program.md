@@ -4,9 +4,9 @@
 
 You are optimizing **AutoEvo-Agent**, a hybrid agent that combines three lineages:
 
-1. **autoresearch** — The overnight meta-agent loop: edit prompt → run eval → check score → keep/discard → repeat
-2. **autoagent** — "Like autoresearch but for agent engineering." You (the meta-agent) edit `agent.py` (harness), not just prompts
-3. **live-swe-agent** — Runtime self-evolution: the agent creates its own tools *during* task solving, not just between runs
+1. [**autoresearch**](https://github.com/asgaardlab/autoresearch) — The overnight meta-agent loop: edit prompt → run eval → check score → keep/discard → repeat
+2. [**autoagent**](https://github.com/kevinrgu/autoagent) — "Like autoresearch but for agent engineering." You (the meta-agent) edit `agent.py` (harness), not just prompts
+3. [**live-swe-agent**](https://github.com/OpenAutoCoder/live-swe-agent) — Runtime self-evolution: the agent creates its own tools *during* task solving, not just between runs
 
 **AutoEvo-Agent does all three**: overnight harness optimization (autoagent/autoresearch) *plus* runtime tool creation (live-swe-agent), with the meta-agent discovering optimal self-evolution strategies.
 
