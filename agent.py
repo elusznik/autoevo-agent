@@ -16,7 +16,7 @@ Single-file Harbor agent harness: --agent-import-path agent:AutoEvoAgent
 Supported providers via litellm:
 - anthropic: claude-sonnet-4-5, claude-opus-4-5, etc.
 - openai: gpt-4o, gpt-5, etc.
-- minimax: minimax-m2, minimax-m2.7, etc.
+- minimax: minimax-m2.7
 - google: gemini-2.0-flash, gemini-3-flash, etc.
 - fireworks: fireworks_ai models
 - together: together_ai models

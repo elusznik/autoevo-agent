@@ -62,7 +62,7 @@ Uses **litellm** for provider-agnostic model access. Any litellm-supported model
 
 | Provider | Model | Notes |
 |---------|-------|-------|
-| MiniMax | minimax-m3 | Cheapest, latest |
+| MiniMax | minimax-m2.7 | Cheapest, latest |
 | Google | gemini-3.1-pro | SOTA reasoning |
 | Anthropic | claude-sonnet-4-6 | Claude Sonnet 4.6 |
 | Anthropic | claude-opus-4-6 | Claude Opus 4.6 |
