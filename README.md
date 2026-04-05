@@ -47,6 +47,22 @@ The insight: live-swe-agent shows LLMs can extend themselves at runtime. autoage
 - API keys for your LLM provider
 - [Harbor](https://github.com/laude-institute/harbor) installed
 
+### Supported Models
+
+Uses **litellm** for provider-agnostic model access. Any litellm-supported model works:
+
+| Provider | Model | Cost/task | tbench 2.0 Score |
+|---------|-------|-----------|-------------------|
+| MiniMax | minimax-m2.7 | ~$0.001 | ~42% (M2.5) |
+| Anthropic | claude-sonnet-4-5 | ~$0.02 | ~40% |
+| OpenAI | gpt-4o | ~$0.01 | ~50% |
+| Google | gemini-2.0-flash-exp | varies | varies |
+
+Set via environment variable:
+```bash
+export AUTOEVO_MODEL=minimax/minimax-m2.7
+```
+
 ### Installation
 
 ```bash

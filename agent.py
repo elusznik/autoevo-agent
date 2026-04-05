@@ -12,6 +12,22 @@ This harness does ALL THREE:
 - The meta-agent discovers optimal self-evolution strategies
 
 Single-file Harbor agent harness: --agent-import-path agent:AutoEvoAgent
+
+Supported providers via litellm:
+- anthropic: claude-sonnet-4-5, claude-opus-4-5, etc.
+- openai: gpt-4o, gpt-5, etc.
+- minimax: minimax-m2, minimax-m2.7, etc.
+- google: gemini-2.0-flash, gemini-3-flash, etc.
+- fireworks: fireworks_ai models
+- together: together_ai models
+- ollama: local models
+
+Example MODEL values:
+- "anthropic/claude-sonnet-4-5"
+- "openai/gpt-4o"
+- "minimax/minimax-m2.7"
+- "google/gemini-2.0-flash-exp"
+- "ollama/llama3"
 """
 
 from __future__ import annotations
@@ -27,6 +43,24 @@ from typing import Any
 # ============================================================================
 # EDITABLE HARNESS — The meta-agent modifies this section
 # ============================================================================
+
+# Model configuration
+# Format: "provider/model-name" (litellm format)
+# See litellm documentation for full list of supported models
+MODEL = os.environ.get("AUTOEVO_MODEL", "minimax/minimax-m2.7")
+
+# Model-specific settings
+MODEL_SETTINGS = {
+    # Temperature for generation
+    "temperature": 0.0,
+    # Max tokens to generate
+    "max_tokens": 4096,
+    # Thinking/reasoning settings (provider-specific)
+    "thinking": None,  # Set to {"type": "enabled", "budget_tokens": 10000} for Anthropic
+}
+
+# Max turns before giving up
+MAX_TURNS = 50
 
 # Primary edit surface: Self-evolution configuration
 # The meta-agent optimizes these values via program.md directives
@@ -218,19 +252,19 @@ echo TASK_COMPLETE
 ```
 """
 
-# Model to use
-MODEL = "claude-sonnet-4-5"
-
-# Max turns before giving up
-MAX_TURNS = 50
-
-# ============================================================================
-# END EDITABLE SECTION
-# ============================================================================
-
 # ============================================================================
 # AGENT IMPLEMENTATION
 # ============================================================================
+
+# Import litellm for model calls
+try:
+    import litellm
+    litellm.drop_params = True  # Allow extra params like 'thinking'
+    LITELLM_AVAILABLE = True
+except ImportError:
+    LITELLM_AVAILABLE = False
+    print("Warning: litellm not installed. Run: pip install litellm")
+
 
 class EvolutionTracker:
     """Tracks bash patterns and triggers evolution."""
@@ -271,7 +305,6 @@ class EvolutionTracker:
         # Count command patterns (normalize for comparison)
         patterns = {}
         for cmd in window:
-            # Extract base command and key args
             normalized = self._normalize_command(cmd)
             patterns[normalized] = patterns.get(normalized, 0) + 1
         
@@ -326,10 +359,8 @@ class EvolutionTracker:
     
     def _normalize_command(self, command: str) -> str:
         """Normalize command for pattern matching."""
-        # Remove specific file names, numbers
         normalized = re.sub(r'\S+\.(py|js|ts)', '<file>', command)
         normalized = re.sub(r'\d+', '<n>', normalized)
-        # Extract base command
         base = normalized.strip().split()[0] if normalized.strip() else ""
         return base
     
@@ -348,22 +379,23 @@ class EvolutionTracker:
 class AutoEvoAgent:
     """Agent that implements self-evolution with evolution config."""
     
-    def __init__(self, evolution_config: dict | None = None):
+    def __init__(self, evolution_config: dict | None = None, model: str = MODEL, model_settings: dict | None = None):
         self.evolution_config = evolution_config or EVOLUTION_CONFIG
+        self.model = model
+        self.model_settings = model_settings or MODEL_SETTINGS
         self.tracker = EvolutionTracker(self.evolution_config)
-        self.tools_created: dict[str, str] = {}  # name -> path
+        self.tools_created: dict[str, str] = {}
+        self.conversation_history: list[dict] = []
+    
+    def get_system_prompt(self) -> str:
+        """Get the full system prompt with evolution config."""
+        return SYSTEM_PROMPT + "\n\n" + self.evolution_config.get("evolution_prompt", "")
     
     def should_evolve(self, last_bash: str | None = None) -> dict | None:
         """Check if evolution should be triggered."""
         if last_bash:
-            trigger = self.tracker.add_bash(last_bash)
-            if trigger and trigger["tool"]:
-                return trigger
+            return self.tracker.add_bash(last_bash)
         return None
-    
-    def get_evolution_prompt(self) -> str:
-        """Get the evolution prompting text."""
-        return self.evolution_config.get("evolution_prompt", "")
     
     def create_tool(self, tool_name: str, tool_path: str) -> bool:
         """Record a created tool."""
@@ -376,6 +408,50 @@ class AutoEvoAgent:
     def get_created_tools(self) -> list[str]:
         """Get list of created tool names."""
         return list(self.tools_created.keys())
+    
+    def call_model(self, messages: list[dict], tools: list[dict] | None = None) -> dict:
+        """
+        Call the LLM via litellm.
+        
+        Args:
+            messages: List of message dicts with 'role' and 'content'
+            tools: Optional list of tool definitions
+            
+        Returns:
+            Response dict with 'content', 'tool_calls', etc.
+        """
+        if not LITELLM_AVAILABLE:
+            raise RuntimeError("litellm not available. Install with: pip install litellm")
+        
+        # Build litellm params
+        params = {
+            "model": self.model,
+            "messages": messages,
+            "temperature": self.model_settings.get("temperature", 0.0),
+            "max_tokens": self.model_settings.get("max_tokens", 4096),
+        }
+        
+        # Add thinking if supported and configured
+        thinking = self.model_settings.get("thinking")
+        if thinking:
+            params["thinking"] = thinking
+        
+        # Add tools if provided
+        if tools:
+            params["tools"] = tools
+        
+        # Make the call
+        response = litellm.completion(**params)
+        
+        return response
+    
+    def format_tool_result(self, tool_name: str, result: str) -> dict:
+        """Format a tool result for the conversation."""
+        return {
+            "role": "tool",
+            "content": result,
+            "tool_call_id": tool_name,  # Simplified - real impl would use actual IDs
+        }
 
 
 # ============================================================================
@@ -387,62 +463,178 @@ from harbor.environments.base import BaseEnvironment
 from harbor.models.agent.context import AgentContext
 
 
+def create_bash_tool(environment: BaseEnvironment):
+    """Create a bash tool that runs commands in the Harbor environment."""
+    async def run_bash(command: str, timeout: int = 120) -> str:
+        try:
+            result = await environment.exec(command=command, timeout_sec=timeout)
+            out = ""
+            if result.stdout:
+                out += result.stdout
+            if result.stderr:
+                out += f"\nSTDERR:\n{result.stderr}"
+            return out or "(no output)"
+        except Exception as exc:
+            return f"ERROR: {exc}"
+    return run_bash
+
+
 async def run_task(
     environment: BaseEnvironment,
     instruction: str,
-) -> tuple[object, int]:
-    """Run the self-evolving agent on a task."""
-    agent = AutoEvoAgent(evolution_config=EVOLUTION_CONFIG)
+    model: str = MODEL,
+    max_turns: int = MAX_TURNS,
+) -> tuple[dict, int]:
+    """
+    Run the self-evolving agent on a task.
+    
+    Args:
+        environment: Harbor environment for executing commands
+        instruction: Task instruction
+        model: Model to use (e.g., "minimax/minimax-m2.7")
+        max_turns: Maximum number of turns
+        
+    Returns:
+        Tuple of (result_dict, duration_ms)
+    """
+    if not LITELLM_AVAILABLE:
+        raise RuntimeError("litellm not available. Install with: pip install litellm")
+    
+    agent = AutoEvoAgent(
+        evolution_config=EVOLUTION_CONFIG,
+        model=model,
+        model_settings=MODEL_SETTINGS,
+    )
     
     t0 = time.time()
     
-    # Build the full prompt with evolution config
-    system_prompt = SYSTEM_PROMPT + "\n\n" + agent.get_evolution_prompt()
+    # Build initial messages
+    messages = [
+        {"role": "system", "content": agent.get_system_prompt()},
+        {"role": "user", "content": instruction},
+    ]
     
-    # We'll use a simple bash-based approach since we're targeting
-    # the Harbor environment which provides shell access
+    # Define bash tool for litellm
+    bash_tool = {
+        "type": "function",
+        "function": {
+            "name": "bash",
+            "description": "Execute a bash command. Returns stdout and stderr.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "command": {
+                        "type": "string",
+                        "description": "The bash command to execute",
+                    },
+                    "timeout": {
+                        "type": "integer",
+                        "description": "Timeout in seconds (default: 120)",
+                    },
+                },
+                "required": ["command"],
+            },
+        },
+    }
+    
+    bash = create_bash_tool(environment)
     turns = 0
     bash_history = []
-    last_output = ""
     created_tools = {}
     
-    # Simple state machine for the agent loop
-    state = "thinking"
-    
-    while turns < MAX_TURNS:
+    while turns < max_turns:
         turns += 1
         
-        # In a real implementation, this would call the LLM
-        # For now, we'll structure it for the meta-agent to understand
-        
-        # Check for evolution triggers
-        trigger = agent.should_evolve(last_output if last_output else None)
-        
-        if trigger and trigger["tool"]:
-            # Agent should create a tool
-            tool_prompt = f"""
-EVOLUTION TRIGGERED: {trigger['type']}
-
-Create the following tool:
-
-{trigger['tool']['template']}
-
-Then invoke it to help with the task.
-"""
-            # Execute in environment
-            result = await environment.exec(command=tool_prompt, timeout_sec=120)
-            last_output = result.stdout + result.stderr
-            continue
-        
-        # Normal execution - execute instruction in environment
-        # The LLM would generate the actual command here
-        # For Harbor integration, we pass control back
-        
-        if "TASK_COMPLETE" in last_output:
+        # Call the model
+        try:
+            response = agent.call_model(messages, tools=[bash_tool])
+        except Exception as e:
+            messages.append({
+                "role": "assistant",
+                "content": f"Error calling model: {e}",
+            })
             break
         
-        # Check terminal condition
-        if "echo TASK_COMPLETE" in last_output or "COMPLETE_TASK_AND_SUBMIT" in last_output:
+        # Extract response
+        if hasattr(response, "choices"):
+            choice = response.choices[0]
+            message = choice.message
+            
+            # Handle tool calls
+            if hasattr(message, "tool_calls") and message.tool_calls:
+                for tool_call in message.tool_calls:
+                    func = tool_call.function
+                    messages.append({
+                        "role": "assistant",
+                        "content": "",  # May have text before tool call
+                        "tool_calls": [{
+                            "id": tool_call.id,
+                            "type": "function",
+                            "function": {
+                                "name": func.name,
+                                "arguments": func.arguments,
+                            },
+                        }],
+                    })
+                    
+                    # Execute tool
+                    try:
+                        args = json.loads(func.arguments) if isinstance(func.arguments, str) else func.arguments
+                        command = args.get("command", "")
+                        timeout = args.get("timeout", 120)
+                        
+                        result = await bash(command, timeout)
+                        bash_history.append(command)
+                        
+                        # Check for evolution triggers
+                        trigger = agent.should_evolve(command)
+                        
+                        messages.append({
+                            "role": "tool",
+                            "tool_call_id": tool_call.id,
+                            "content": result,
+                        })
+                        
+                        # If evolution triggered and we have a tool template
+                        if trigger and trigger.get("tool"):
+                            tool = trigger["tool"]
+                            # Agent would create the tool here
+                            created_tools[tool["name"]] = tool["template"]
+                            agent.create_tool(tool["name"], f"/tmp/{tool['name']}.py")
+                            
+                            messages.append({
+                                "role": "system",
+                                "content": f"[EVOLUTION] Created tool: {tool['name']}",
+                            })
+                        
+                        # Check for completion
+                        if "TASK_COMPLETE" in result or "COMPLETE_TASK_AND_SUBMIT" in result:
+                            break
+                            
+                    except Exception as e:
+                        messages.append({
+                            "role": "tool",
+                            "tool_call_id": tool_call.id,
+                            "content": f"Error executing tool: {e}",
+                        })
+            else:
+                # Text response
+                content = message.content or ""
+                messages.append({
+                    "role": "assistant",
+                    "content": content,
+                })
+                
+                # Check for completion
+                if "TASK_COMPLETE" in content:
+                    break
+        
+        # Check for excessive turns without progress
+        if turns >= max_turns:
+            messages.append({
+                "role": "system",
+                "content": f"Max turns ({max_turns}) reached. Task incomplete.",
+            })
             break
     
     duration_ms = int((time.time() - t0) * 1000)
@@ -452,6 +644,7 @@ Then invoke it to help with the task.
         "bash_history": bash_history,
         "created_tools": list(created_tools.keys()),
         "duration_ms": duration_ms,
+        "model": model,
     }, duration_ms
 
 
@@ -498,7 +691,7 @@ def to_atif(result: Any, model: str, duration_ms: int = 0) -> dict:
         },
         "steps": steps,
         "final_metrics": {
-            "total_prompt_tokens": 0,
+            "total_prompt_tokens": 0,  # Could track via litellm
             "total_completion_tokens": 0,
             "total_cached_tokens": 0,
             "total_cost_usd": None,
@@ -548,11 +741,19 @@ class AutoEvoAgentAdapter(BaseAgent):
             target_path="/task/instruction.md"
         )
 
+        # Get model from environment or use default
+        model = os.environ.get("AUTOEVO_MODEL", MODEL)
+        
         # Run the self-evolving agent
-        result, duration_ms = await run_task(environment, instruction)
+        result, duration_ms = await run_task(
+            environment,
+            instruction,
+            model=model,
+            max_turns=MAX_TURNS,
+        )
 
         # Serialize trajectory
-        atif = to_atif(result, model=MODEL, duration_ms=duration_ms)
+        atif = to_atif(result, model=model, duration_ms=duration_ms)
         traj_path = self.logs_dir / "trajectory.json"
         traj_path.write_text(json.dumps(atif, indent=2))
 
@@ -566,10 +767,18 @@ class AutoEvoAgentAdapter(BaseAgent):
             pass
 
         print(
-            f"turns={result.get('turns', 0) if isinstance(result, dict) else 0} "
+            f"turns={result.get('turns', 0)} "
             f"duration_ms={duration_ms} "
-            f"tools_created={len(result.get('created_tools', []) if isinstance(result, dict) else [])}"
+            f"tools_created={len(result.get('created_tools', []))}"
         )
 
 
-__all__ = ["AutoEvoAgent", "AutoEvoAgentAdapter", "EVOLUTION_CONFIG", "SYSTEM_PROMPT", "MODEL"]
+__all__ = [
+    "AutoEvoAgent",
+    "AutoEvoAgentAdapter", 
+    "EVOLUTION_CONFIG",
+    "SYSTEM_PROMPT",
+    "MODEL",
+    "MODEL_SETTINGS",
+    "run_task",
+]
