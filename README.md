@@ -2,6 +2,16 @@
 
 > **Automating the automation of automation.** A meta-agent framework that optimizes live SWE-agent-style self-evolution prompting via autonomous harness engineering.
 
+## ⚠️ Status: Needs Fix
+
+The agent runs but **does not complete tasks** (scores 0.0). See [TODO.md](TODO.md) for details.
+
+**Current issue:** Agent explores files, creates tools, but doesn't write output to required location.
+
+This repo is ready for another agent to read and fix. See TODO.md for instructions.
+
+---
+
 This project combines three insights:
 
 1. [**autoresearch**](https://github.com/asgaardlab/autoresearch) — The original insight: an agent that runs overnight, edits its own prompt, checks score, keeps or discards changes, repeats. (The loop that everything else builds on.)
