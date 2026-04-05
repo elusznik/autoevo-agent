@@ -1,0 +1,14 @@
+[task]
+name = "example-task"
+version = "1.0.0"
+description = "Example task for testing AutoEvo-Agent"
+
+# Timeouts (in seconds)
+setup_timeout = 300
+run_timeout = 600
+verify_timeout = 60
+
+# Metadata
+[task.metadata]
+difficulty = "easy"
+skills = ["python", "debugging"]

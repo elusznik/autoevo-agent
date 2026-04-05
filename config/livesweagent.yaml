@@ -1,0 +1,48 @@
+# Reference: live-swe-agent configuration
+# This shows the original live-swe-agent config that inspired our EVOLUTION_CONFIG
+# https://github.com/OpenAutoCoder/live-swe-agent
+
+agent:
+  # Original live-swe-agent uses Jinja2 templates
+  system_template: |
+    You are a helpful assistant that can interact with a computer.
+
+    Your response must contain exactly ONE bash code block with ONE command.
+    Include a THOUGHT section before your command.
+
+  instance_template: |
+    Please solve this issue: {{task}}
+
+    ## Recommended Workflow
+    1. Analyze the codebase
+    2. Create a script to reproduce the issue
+    3. Edit the source code
+    4. Verify your fix
+    5. Test edge cases
+    6. Submit with: `echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT`
+
+    ## Creating your own tools
+    You can create custom Python tools to help with the task.
+
+  action_observation_template: |
+    <returncode>{{output.returncode}}</returncode>
+    <output>{{ output.output }}</output>
+
+  # live-swe-agent's key innovation: prompt the agent to CREATE tools
+  # rather than providing them statically
+
+environment:
+  env:
+    PAGER: cat
+    MANPAGER: cat
+
+model:
+  model_kwargs:
+    temperature: 0.0
+    drop_params: true
+
+# Key differences from our approach:
+# 1. live-swe-agent relies on the LLM to decide WHEN to create tools
+# 2. We add explicit TRIGGERS to detect when tools would be helpful
+# 3. We provide TOOL TEMPLATES to reduce the LLM's creative burden
+# 4. We track evolution patterns for meta-agent optimization

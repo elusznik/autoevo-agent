@@ -1,0 +1,5 @@
+# Core dependencies - these are provided by Harbor
+# harbor>=0.1.0
+
+# Optional: for local development/testing
+# pytest>=7.0
