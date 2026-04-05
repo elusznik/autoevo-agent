@@ -63,7 +63,7 @@ Uses **litellm** for provider-agnostic model access. Any litellm-supported model
 | **Free** | qwen3.6-plus:free | Rate limited |
 
 ```bash
-export AUTOEVO_MODEL=minimax/minimax-m3
+export AUTOEVO_MODEL=minimax/minimax-m2.7
 ```
 
 ### Installation

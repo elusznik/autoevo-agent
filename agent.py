@@ -49,11 +49,11 @@ from typing import Any
 # See litellm documentation for full list of supported models
 #
 # Recommended models (April 2026):
-#   - "minimax/minimax-m3" (cheapest, latest MiniMax)
+#   - "minimax/minimax-m2.7" (cheapest, $0.30/1M input)
 #   - "google/gemini-3.1-pro" (SOTA, Gemini 3.1)
 #   - "anthropic/claude-sonnet-4-6" (Claude Sonnet 4.6)
-#   - "anthropic/claude-opus-4-6" (Claude Opus 4.6, expensive)
-#   - "openai/gpt-5.4" (GPT-5.4, latest)
+#   - "anthropic/claude-opus-4-6" (Claude Opus 4.6)
+#   - "openai/gpt-5.4" (GPT-5.4)
 #   - "x-ai/grok-4.20" (Grok 4.20)
 #   - "deepseek/deepseek-3.2" (DeepSeek 3.2)
 #
